@@ -1,10 +1,11 @@
 ![](cover.png)
 
-**A set of challenges to hack implementations of DeFi in Ethereum.**
-
-Featuring flash loans, price oracles, governance, NFTs, lending pools, smart contract wallets, timelocks, and more!
+My solutions for Damn Vulnerable Defi
 
 Created by [@tinchoabbate](https://twitter.com/tinchoabbate)
+
+Check out the accompanying video series on YouTube
+https://www.youtube.com/playlist?list=PL7gsugpbBFmB508sfGdFz0FKSDrglkaPg
 
 ## Play
 
